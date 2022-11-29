@@ -61,8 +61,33 @@
 
 namespace autobahn {
 
-inline wamp_session::wamp_session(
-        boost::asio::io_context& io_context,
+namespace detail {
+
+/// helpers to determine whether execution context is running in this thread
+template <typename ExecutionContext>
+inline bool running_in_this_thread(ExecutionContext&)
+{
+    return false;
+}
+
+template <>
+inline bool running_in_this_thread<boost::asio::io_context>(boost::asio::io_context& io_context)
+{
+    return io_context.get_executor().running_in_this_thread();
+}
+
+template <>
+inline bool running_in_this_thread<boost::asio::strand<boost::asio::io_context::executor_type>>(
+    boost::asio::strand<boost::asio::io_context::executor_type>& strand)
+{
+    return strand.running_in_this_thread();
+}
+
+} // namespace detail
+
+template <typename ExecutionContext>
+inline wamp_session<ExecutionContext>::wamp_session(
+        ExecutionContext& io_context,
         bool debug_enabled)
     : m_debug_enabled(debug_enabled)
     , m_io_context(io_context)
@@ -74,11 +99,13 @@ inline wamp_session::wamp_session(
 {
 }
 
-inline wamp_session::~wamp_session()
+template <typename ExecutionContext>
+inline wamp_session<ExecutionContext>::~wamp_session()
 {
 }
 
-inline boost::future<void> wamp_session::start()
+template <typename ExecutionContext>
+inline boost::future<void> wamp_session<ExecutionContext>::start()
 {
     auto weak_self = std::weak_ptr<wamp_session>(this->shared_from_this());
 
@@ -105,7 +132,8 @@ inline boost::future<void> wamp_session::start()
     return m_session_start.get_future();
 }
 
-inline boost::future<void> wamp_session::stop()
+template <typename ExecutionContext>
+inline boost::future<void> wamp_session<ExecutionContext>::stop()
 {
     auto weak_self = std::weak_ptr<wamp_session>(this->shared_from_this());
 
@@ -137,7 +165,8 @@ inline boost::future<void> wamp_session::stop()
     return m_session_stop.get_future();
 }
 
-inline boost::future<uint64_t> wamp_session::join(
+template <typename ExecutionContext>
+inline boost::future<uint64_t> wamp_session<ExecutionContext>::join(
         const std::string& realm,
         const std::vector<std::string>& authentication_methods,
         const std::string& authentication_id,
@@ -205,7 +234,8 @@ inline boost::future<uint64_t> wamp_session::join(
     return m_session_join.get_future();
 }
 
-inline boost::future<std::string> wamp_session::leave(const std::string& reason)
+template <typename ExecutionContext>
+inline boost::future<std::string> wamp_session<ExecutionContext>::leave(const std::string& reason)
 {
     auto message = std::make_shared<wamp_message>(3);
     message->set_field(0, static_cast<int>(message_type::GOODBYE));
@@ -237,7 +267,8 @@ inline boost::future<std::string> wamp_session::leave(const std::string& reason)
     return m_session_leave.get_future();
 }
 
-inline boost::future<void> wamp_session::publish(const std::string& topic,const wamp_publish_options& options)
+template <typename ExecutionContext>
+inline boost::future<void> wamp_session<ExecutionContext>::publish(const std::string& topic,const wamp_publish_options& options)
 {
     uint64_t request_id = ++m_request_id;
 
@@ -267,8 +298,9 @@ inline boost::future<void> wamp_session::publish(const std::string& topic,const 
     return result->get_future();
 }
 
+template <typename ExecutionContext>
 template <typename List>
-inline boost::future<void> wamp_session::publish(const std::string& topic, const List& arguments,const wamp_publish_options& options)
+inline boost::future<void> wamp_session<ExecutionContext>::publish(const std::string& topic, const List& arguments,const wamp_publish_options& options)
 {
     uint64_t request_id = ++m_request_id;
 
@@ -299,8 +331,9 @@ inline boost::future<void> wamp_session::publish(const std::string& topic, const
     return result->get_future();
 }
 
+template <typename ExecutionContext>
 template <typename List, typename Map>
-inline boost::future<void> wamp_session::publish(
+inline boost::future<void> wamp_session<ExecutionContext>::publish(
         const std::string& topic, const List& arguments, const Map& kw_arguments,const wamp_publish_options& options)
 {
     uint64_t request_id = ++m_request_id;
@@ -333,7 +366,8 @@ inline boost::future<void> wamp_session::publish(
     return result->get_future();
 }
 
-inline boost::future<wamp_subscription> wamp_session::subscribe(
+template <typename ExecutionContext>
+inline boost::future<wamp_subscription> wamp_session<ExecutionContext>::subscribe(
         const std::string& topic,
         const wamp_event_handler& handler,
         const wamp_subscribe_options& options)
@@ -366,7 +400,8 @@ inline boost::future<wamp_subscription> wamp_session::subscribe(
     return subscribe_request->response().get_future();
 }
 
-inline boost::future<void> wamp_session::unsubscribe(const wamp_subscription& subscription)
+template <typename ExecutionContext>
+inline boost::future<void> wamp_session<ExecutionContext>::unsubscribe(const wamp_subscription& subscription)
 {
     uint64_t request_id = ++m_request_id;
 
@@ -395,7 +430,8 @@ inline boost::future<void> wamp_session::unsubscribe(const wamp_subscription& su
     return unsubscribe_request->response().get_future();
 }
 
-inline boost::future<wamp_call_result> wamp_session::call(
+template <typename ExecutionContext>
+inline boost::future<wamp_call_result> wamp_session<ExecutionContext>::call(
         const std::string& procedure,
         const wamp_call_options& options)
 {
@@ -427,8 +463,9 @@ inline boost::future<wamp_call_result> wamp_session::call(
     return call->result().get_future();
 }
 
+template<typename ExecutionContext>
 template<typename List>
-inline boost::future<wamp_call_result> wamp_session::call(
+inline boost::future<wamp_call_result> wamp_session<ExecutionContext>::call(
         const std::string& procedure,
         const List& arguments,
         const wamp_call_options& options)
@@ -462,8 +499,9 @@ inline boost::future<wamp_call_result> wamp_session::call(
     return call->result().get_future();
 }
 
+template<typename ExecutionContext>
 template<typename List, typename Map>
-inline boost::future<wamp_call_result> wamp_session::call(
+inline boost::future<wamp_call_result> wamp_session<ExecutionContext>::call(
         const std::string& procedure,
         const List& arguments,
         const Map& kw_arguments,
@@ -499,7 +537,8 @@ inline boost::future<wamp_call_result> wamp_session::call(
     return call->result().get_future();
 }
 
-inline boost::future<wamp_registration> wamp_session::provide(
+template <typename ExecutionContext>
+inline boost::future<wamp_registration> wamp_session<ExecutionContext>::provide(
         const std::string& name,
         const wamp_procedure& procedure,
         const provide_options& options)
@@ -532,7 +571,8 @@ inline boost::future<wamp_registration> wamp_session::provide(
     return register_request->response().get_future();
 }
 
-inline boost::future<void> wamp_session::unprovide(const wamp_registration& registration)
+template <typename ExecutionContext>
+inline boost::future<void> wamp_session<ExecutionContext>::unprovide(const wamp_registration& registration)
 {
     uint64_t request_id = ++m_request_id;
 
@@ -562,7 +602,8 @@ inline boost::future<void> wamp_session::unprovide(const wamp_registration& regi
 	return unregister_request->response().get_future();
 }
 
-inline boost::future<wamp_authenticate> wamp_session::on_challenge(const wamp_challenge& /*challenge*/)
+template <typename ExecutionContext>
+inline boost::future<wamp_authenticate> wamp_session<ExecutionContext>::on_challenge(const wamp_challenge& /*challenge*/)
 {
     // a dummy implementation
     boost::promise<wamp_authenticate> dummy;
@@ -570,7 +611,8 @@ inline boost::future<wamp_authenticate> wamp_session::on_challenge(const wamp_ch
     return dummy.get_future();
 }
 
-inline void wamp_session::on_attach(const std::shared_ptr<wamp_transport>& transport)
+template <typename ExecutionContext>
+inline void wamp_session<ExecutionContext>::on_attach(const std::shared_ptr<wamp_transport>& transport)
 {
     // FIXME: We should be deferring this operation to the io context. This
     //        will almost certainly require us to return a future here to
@@ -588,7 +630,8 @@ inline void wamp_session::on_attach(const std::shared_ptr<wamp_transport>& trans
     m_transport = transport;
 }
 
-inline void wamp_session::on_detach(bool /*was_clean*/, const std::string& /*reason*/)
+template <typename ExecutionContext>
+inline void wamp_session<ExecutionContext>::on_detach(bool /*was_clean*/, const std::string& /*reason*/)
 {
     // FIXME: We should be deferring this operation to the io context. This
     //        will almost certainly require us to return a future here to
@@ -611,12 +654,27 @@ inline void wamp_session::on_detach(bool /*was_clean*/, const std::string& /*rea
     m_transport.reset();
 }
 
-inline void wamp_session::on_message(wamp_message&& message)
+template <typename ExecutionContext>
+inline void wamp_session<ExecutionContext>::on_message(wamp_message&& message)
 {
     // FIXME: Move this check into the transport
     //if (obj.type != msgpack::type::ARRAY) {
     //    throw protocol_error("invalid message structure - message is not an array");
     //}
+
+    // Make sure we are executed in a proper context
+    if (not detail::running_in_this_thread(m_io_context)) {
+        auto weak_self = std::weak_ptr<wamp_session>(this->shared_from_this());
+        boost::asio::post(m_io_context, [this, weak_self, message = std::move(message)]() mutable {
+            auto shared_self = weak_self.lock();
+            if (!shared_self) {
+                return;
+            }
+
+            shared_self->on_message(std::move(message));
+        });
+        return;
+    }
 
     if (message.size() < 1) {
         throw protocol_error("invalid message structure - missing message code");
@@ -696,7 +754,8 @@ inline void wamp_session::on_message(wamp_message&& message)
     }
 }
 
-inline void wamp_session::process_challenge(wamp_message&& message)
+template <typename ExecutionContext>
+inline void wamp_session<ExecutionContext>::process_challenge(wamp_message&& message)
 {
     // kind of authentication
     std::string whatAuth = message.field<std::string>(1);
@@ -845,14 +904,16 @@ inline void wamp_session::process_challenge(wamp_message&& message)
     });
 }
 
-inline void wamp_session::process_welcome(wamp_message&& message)
+template <typename ExecutionContext>
+inline void wamp_session<ExecutionContext>::process_welcome(wamp_message&& message)
 {
     m_session_id = message.field<uint64_t>(1);
     message.field(2).convert(m_welcome_details);
     m_session_join.set_value(m_session_id);
 }
 
-inline void wamp_session::process_abort(wamp_message&& message)
+template <typename ExecutionContext>
+inline void wamp_session<ExecutionContext>::process_abort(wamp_message&& message)
 {
     // [ABORT, Details|dict, Reason|uri]
 
@@ -874,7 +935,8 @@ inline void wamp_session::process_abort(wamp_message&& message)
     m_session_join.set_exception(boost::copy_exception(abort_error(uri)));
 }
 
-inline void wamp_session::process_goodbye(wamp_message&& message)
+template <typename ExecutionContext>
+inline void wamp_session<ExecutionContext>::process_goodbye(wamp_message&& message)
 {
     m_session_id = 0;
 
@@ -896,7 +958,8 @@ inline void wamp_session::process_goodbye(wamp_message&& message)
     m_session_leave.set_value(reason);
 }
 
-inline void wamp_session::process_error(wamp_message&& message)
+template <typename ExecutionContext>
+inline void wamp_session<ExecutionContext>::process_error(wamp_message&& message)
 {
     // [ERROR, REQUEST.Type|int, REQUEST.Request|id, Details|dict, Error|uri]
     // [ERROR, REQUEST.Type|int, REQUEST.Request|id, Details|dict, Error|uri, Arguments|list]
@@ -1047,8 +1110,8 @@ inline void wamp_session::process_error(wamp_message&& message)
     }
 }
 
-
-inline void wamp_session::process_invocation(wamp_message&& message)
+template <typename ExecutionContext>
+inline void wamp_session<ExecutionContext>::process_invocation(wamp_message&& message)
 {
     // [INVOCATION, Request|id, REGISTERED.Registration|id, Details|dict]
     // [INVOCATION, Request|id, REGISTERED.Registration|id, Details|dict, CALL.Arguments|list]
@@ -1144,7 +1207,8 @@ inline void wamp_session::process_invocation(wamp_message&& message)
     }
 }
 
-inline void wamp_session::process_call_result(wamp_message&& message)
+template <typename ExecutionContext>
+inline void wamp_session<ExecutionContext>::process_call_result(wamp_message&& message)
 {
     // [RESULT, CALL.Request|id, Details|dict]
     // [RESULT, CALL.Request|id, Details|dict, YIELD.Arguments|list]
@@ -1186,7 +1250,8 @@ inline void wamp_session::process_call_result(wamp_message&& message)
     }
 }
 
-inline void wamp_session::process_subscribed(wamp_message&& message)
+template <typename ExecutionContext>
+inline void wamp_session<ExecutionContext>::process_subscribed(wamp_message&& message)
 {
     // [SUBSCRIBED, SUBSCRIBE.Request|id, Subscription|id]
     if (message.size() != 3) {
@@ -1214,7 +1279,8 @@ inline void wamp_session::process_subscribed(wamp_message&& message)
     }
 }
 
-inline void wamp_session::process_unsubscribed(wamp_message&& message)
+template <typename ExecutionContext>
+inline void wamp_session<ExecutionContext>::process_unsubscribed(wamp_message&& message)
 {
     // [UNSUBSCRIBED, UNSUBSCRIBE.Request|id]
     if (message.size() != 2) {
@@ -1237,7 +1303,8 @@ inline void wamp_session::process_unsubscribed(wamp_message&& message)
     }
 }
 
-inline void wamp_session::process_event(wamp_message&& message)
+template <typename ExecutionContext>
+inline void wamp_session<ExecutionContext>::process_event(wamp_message&& message)
 {
     // [EVENT, SUBSCRIBED.Subscription|id, PUBLISHED.Publication|id, Details|dict]
     // [EVENT, SUBSCRIBED.Subscription|id, PUBLISHED.Publication|id, Details|dict, PUBLISH.Arguments|list]
@@ -1308,7 +1375,8 @@ inline void wamp_session::process_event(wamp_message&& message)
     }
 }
 
-inline void wamp_session::process_registered(wamp_message&& message)
+template <typename ExecutionContext>
+inline void wamp_session<ExecutionContext>::process_registered(wamp_message&& message)
 {
     // [REGISTERED, REGISTER.Request|id, Registration|id]
 
@@ -1336,7 +1404,8 @@ inline void wamp_session::process_registered(wamp_message&& message)
     }
 }
 
-inline void wamp_session::process_unregistered(wamp_message&& message)
+template <typename ExecutionContext>
+inline void wamp_session<ExecutionContext>::process_unregistered(wamp_message&& message)
 {
     // [UNREGISTERED, UNREGISTER.Request|id]
     if (message.size() != 2) {
@@ -1359,7 +1428,8 @@ inline void wamp_session::process_unregistered(wamp_message&& message)
     }
 }
 
-inline void wamp_session::send_message(wamp_message&& message, bool session_established)
+template <typename ExecutionContext>
+inline void wamp_session<ExecutionContext>::send_message(wamp_message&& message, bool session_established)
 {
     if (!m_running) {
         throw protocol_error("session not running");
@@ -1380,7 +1450,8 @@ inline void wamp_session::send_message(wamp_message&& message, bool session_esta
     m_transport->send_message(std::move(message));
 }
 
-inline const std::unordered_map<std::string, msgpack::object>&  wamp_session::welcome_details()
+template <typename ExecutionContext>
+inline const std::unordered_map<std::string, msgpack::object>&  wamp_session<ExecutionContext>::welcome_details()
 {
     return m_welcome_details;
 }
