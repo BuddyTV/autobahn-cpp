@@ -665,14 +665,17 @@ inline void wamp_session<ExecutionContext>::on_message(wamp_message&& message)
     // Make sure we are executed in a proper context
     if (not detail::running_in_this_thread(m_io_context)) {
         auto weak_self = std::weak_ptr<wamp_session>(this->shared_from_this());
-        boost::asio::post(m_io_context, [this, weak_self, message = std::move(message)]() mutable {
+
+        // Autobahn is C++11-compatible and to preserve this AND to move |message| inside
+        // callable I'm using std::bind() here, because capture with initializer is C++14
+        boost::asio::post(m_io_context, std::bind([weak_self](decltype(message)& message) mutable {
             auto shared_self = weak_self.lock();
             if (!shared_self) {
                 return;
             }
 
             shared_self->on_message(std::move(message));
-        });
+        }, std::move(message)));
         return;
     }
 
