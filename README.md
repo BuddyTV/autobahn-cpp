@@ -331,7 +331,6 @@ oberstet@thinkpad-t430s:~/scm/crossbario/autobahn-cpp/build$ /opt/cmake/bin/cmak
 -- Found Threads: TRUE
 -- Boost version: 1.66.0
 -- Found the following Boost libraries:
---   program_options
 --   system
 --   thread
 --   random
@@ -342,7 +341,7 @@ oberstet@thinkpad-t430s:~/scm/crossbario/autobahn-cpp/build$ /opt/cmake/bin/cmak
 -- AUTOBAHN_BUILD_EXAMPLES:  ON
 -- CMAKE_ROOT:               /opt/cmake/share/cmake-3.11
 -- Boost_INCLUDE_DIRS:       /opt/boost/include
--- Boost_LIBRARIES:          /opt/boost/lib/libboost_program_options.so/opt/boost/lib/libboost_system.so/opt/boost/lib/libboost_thread.so/opt/boost/lib/libboost_random.so/opt/boost/lib/libboost_chrono.so/opt/boost/lib/libboost_date_time.so/opt/boost/lib/libboost_atomic.so
+-- Boost_LIBRARIES:          /opt/boost/lib/libboost_system.so/opt/boost/lib/libboost_thread.so/opt/boost/lib/libboost_random.so/opt/boost/lib/libboost_chrono.so/opt/boost/lib/libboost_date_time.so/opt/boost/lib/libboost_atomic.so
 -- Msgpack_INCLUDE_DIRS:     /opt/msgpack/include
 -- Msgpack_LIBRARIES:        /opt/msgpack/libs
 -- Websocketpp_INCLUDE_DIRS: /opt/websocketpp/include
@@ -398,7 +397,6 @@ oberstet@thinkpad-t430s:~/scm/crossbario/autobahn-cpp/build$ file examples/webso
 examples/websocket_callee: ELF 64-bit LSB executable, x86-64, version 1 (GNU/Linux), dynamically linked, interpreter /lib64/ld-linux-x86-64.so.2, for GNU/Linux 2.6.32, BuildID[sha1]=bfcab40b2350acd5869d913226723999cf0b822e, not stripped
 oberstet@thinkpad-t430s:~/scm/crossbario/autobahn-cpp/build$ ldd examples/websocket_callee
     linux-vdso.so.1 =>  (0x00007fff44760000)
-    libboost_program_options.so.1.66.0 => /opt/boost/lib/libboost_program_options.so.1.66.0 (0x00007f8518873000)
     libboost_system.so.1.66.0 => /opt/boost/lib/libboost_system.so.1.66.0 (0x00007f851866f000)
     libboost_thread.so.1.66.0 => /opt/boost/lib/libboost_thread.so.1.66.0 (0x00007f8518446000)
     libssl.so.1.0.0 => /lib/x86_64-linux-gnu/libssl.so.1.0.0 (0x00007f85181dd000)
