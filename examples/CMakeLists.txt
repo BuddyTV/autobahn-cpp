@@ -2,6 +2,8 @@ if (!APPLE)
     set(CMAKE_EXE_LINKER_FLAGS " -static")
 endif()
 
+find_package(Boost REQUIRED COMPONENTS program_options system thread random)
+
 add_library(examples_parameters parameters.cpp parameters.hpp)
 target_include_directories(examples_parameters PUBLIC ${Boost_INCLUDE_DIRS})
 target_link_libraries(examples_parameters PRIVATE ${Boost_LIBRARIES})

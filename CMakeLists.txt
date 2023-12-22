@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 2.8)
 
 project(autobahn-cpp)
 
-option(AUTOBAHN_BUILD_EXAMPLES "Build examples" ON)
+option(AUTOBAHN_BUILD_EXAMPLES "Build examples" OFF)
 option(AUTOBAHN_BUILD_EXAMPLES_BOTAN "Build Botan cryptosign example" OFF)
 option(AUTOBAHN_USE_LIBCXX "Use libc++ instead of libstdc++ when building with Clang" ON)
 
