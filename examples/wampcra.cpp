@@ -57,7 +57,7 @@ void math(autobahn::wamp_invocation invocation)
 }
 
 class auth_wamp_session :
-    public autobahn::wamp_session
+    public autobahn::wamp_session<boost::asio::io_context>
 {
 public:
     boost::promise<autobahn::wamp_authenticate> challenge_future;
@@ -67,7 +67,7 @@ public:
             boost::asio::io_service& io,
             bool debug_enabled,
             const std::string& secret)
-        : autobahn::wamp_session(io, debug_enabled)
+        : autobahn::wamp_session<boost::asio::io_context>(io, debug_enabled)
         , m_secret(secret)
     {
     }

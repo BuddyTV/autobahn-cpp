@@ -54,7 +54,7 @@ int main(int argc, char** argv)
 
         // create a WAMP session that talks WAMP-RawSocket over TCP
         //
-        auto session = std::make_shared<autobahn::wamp_session>(io, debug);
+        auto session = std::make_shared<autobahn::wamp_session<boost::asio::io_context>>(io, debug);
 
         transport->attach(std::static_pointer_cast<autobahn::wamp_transport_handler>(session));
 

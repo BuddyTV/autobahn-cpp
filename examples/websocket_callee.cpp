@@ -69,7 +69,7 @@ int main(int argc, char** argv)
             ws_clinet, "ws://127.0.0.1:8080/ws", debug);
 
         
-        auto session = std::make_shared<autobahn::wamp_session>(io, debug);
+        auto session = std::make_shared<autobahn::wamp_session<boost::asio::io_context>>(io, debug);
 
         // Create a thread to run the telemetry loop
         transport->attach(std::static_pointer_cast<autobahn::wamp_transport_handler>(session));
