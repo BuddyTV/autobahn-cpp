@@ -89,7 +89,7 @@ namespace autobahn {
     }
 
     template <class Config>
-    inline void wamp_websocketpp_websocket_transport<Config>::on_ws_close(websocketpp::connection_hdl hdl) {
+    inline void wamp_websocketpp_websocket_transport<Config>::on_ws_close(websocketpp::connection_hdl) {
         //Log "Connection closed!");
 
         scoped_lock guard(m_lock);
@@ -97,7 +97,7 @@ namespace autobahn {
     }
 
     template <class Config>
-    inline void wamp_websocketpp_websocket_transport<Config>::on_ws_fail(websocketpp::connection_hdl hdl) {
+    inline void wamp_websocketpp_websocket_transport<Config>::on_ws_fail(websocketpp::connection_hdl) {
         //Log "Connection failed!");
         if (!m_open)
             m_connect.set_exception(boost::copy_exception(network_error("failed to connect")));

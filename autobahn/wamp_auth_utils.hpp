@@ -120,7 +120,7 @@ inline std::string derive_key(
     unsigned char * salt_value = (unsigned char * ) salt.c_str();
 
     std::string str_out;
-    str_out.resize( keylen );
+    str_out.resize( static_cast<size_t>(keylen) );
 
 
     unsigned char * out = (unsigned char *) str_out.c_str();
@@ -204,7 +204,7 @@ inline std::string generate_wcs(int length=14){
 
     std::string s;
     for (int i = 0; i < length; ++i) {
-        s.push_back( WCS_SECRET_CHARSET[ rand() % (sizeof(WCS_SECRET_CHARSET) - 1) ] );
+        s.push_back( WCS_SECRET_CHARSET[ static_cast<size_t>(rand()) % (sizeof(WCS_SECRET_CHARSET) - 1) ] );
     }
 
     return s;

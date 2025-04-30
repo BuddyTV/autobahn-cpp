@@ -85,7 +85,7 @@ struct pack<autobahn::wamp_call_options>
         std::unordered_map<std::string, unsigned> options_map;
         const auto& timeout = options.timeout();
         if (timeout.count() > 0) {
-            options_map["timeout"] = timeout.count();
+            options_map["timeout"] = static_cast<unsigned>(timeout.count());
         }
 
         packer.pack(options_map);
